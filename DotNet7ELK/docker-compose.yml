@@ -1,0 +1,41 @@
+version: '3.4'
+
+services:
+  elasticsearch:
+    container_name: els
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.7.1
+    ports:
+      - 9200:9200
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+      #- ELASTIC_PASSWORD=changeme
+    networks:
+      - elasticnw
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:8.7.1
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    environment:
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    networks:
+      - elasticnw
+
+  sampleapi:
+    image: ${DOCKER_REGISTRY-}sampleapi
+    build:
+      context: .
+      dockerfile: src/SampleApi/Dockerfile
+ 
+networks:
+  elasticnw:
+    driver: bridge
+
+volumes:
+  elasticsearch-data: 

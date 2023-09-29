@@ -1,0 +1,16 @@
+version: '3.4'
+
+services:
+  sampleapi:
+    container_name: weatherapi
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ELKConfiguration__Uri=http://elasticsearch:9200
+    ports:
+      - "7001:80"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    depends_on:
+      - elasticsearch
