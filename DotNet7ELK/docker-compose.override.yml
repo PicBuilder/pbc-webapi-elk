@@ -14,3 +14,5 @@ services:
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
     depends_on:
       - elasticsearch
+    networks:
+      - elasticnw

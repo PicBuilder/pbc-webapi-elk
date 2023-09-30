@@ -14,16 +14,21 @@ var builder = WebApplication.CreateBuilder(args);
 //https://github.com/elkninja
 //https://github.com/elkninja/elastic-stack-docker-part-one
 
-// Add services to the container.
-ConfigureLogs();
+//add logger
+Log.Logger = ConfigureLogs(builder);
 builder.Host.UseSerilog();
+Log.Logger.Information("Application Starting.");
 
+// Add services to the container.
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+//use logging
+app.UseSerilogRequestLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -39,7 +44,7 @@ app.MapControllers();
 app.Run();
 
 #region helper
-void ConfigureLogs()
+Serilog.ILogger ConfigureLogs(WebApplicationBuilder builder)
 {
     //get the environment in which the application is running for
     var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
@@ -51,22 +56,23 @@ void ConfigureLogs()
         .Build();
 
     // create logger
-    //Log.Logger = new LoggerConfiguration()
-    //    .Enrich.FromLogContext()
-    //    .Enrich.WithExceptionDetails() //add details of the exception
-    //    .WriteTo.Debug()
-    //    .WriteTo.Console()
-    //    .WriteTo.Elasticsearch(ConfigureELSSink(config, env))
-    //    .Enrich.WithProperty("Environment", env)
-    //    .CreateLogger();
+    var loggerConfig = new LoggerConfiguration()
+        .Enrich.FromLogContext()
+        .Enrich.WithExceptionDetails() //add details of the exception
+        .WriteTo.Debug()
+        .WriteTo.Console()
+        .WriteTo.Elasticsearch(ConfigureELSSink(config, env))
+        .Enrich.WithProperty("Environment", env);
 
-    Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .WriteTo.Console()
-    .CreateLogger();
+    //Log.Logger = new LoggerConfiguration()
+    //.MinimumLevel.Debug()
+    //.WriteTo.Console()
+    //.CreateLogger();
 
     Serilog.Debugging.SelfLog.Enable(msg => Debug.WriteLine(msg));
     Serilog.Debugging.SelfLog.Enable(Console.Error);
+
+    return loggerConfig.CreateLogger();
 }
 
 ElasticsearchSinkOptions ConfigureELSSink(IConfigurationRoot config, string env)
